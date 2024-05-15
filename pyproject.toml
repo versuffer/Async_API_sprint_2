@@ -1,0 +1,50 @@
+[tool.poetry]
+name = "async-api-sprint-1"
+version = "1.0.0"
+description = ""
+authors = ["Носов Сергей Олегович <SONosov@datafort.ru>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "~3.11.9"
+uvicorn = "0.29.0"
+gunicorn = "22.0.0"
+fastapi = "0.111.0"
+fastapi-cache2 = {extras = ["redis"], version = "^0.2.1"}
+pydantic = "2.7.1"
+pydantic-settings = "2.2.1"
+elasticsearch = "8.13.1"
+
+
+[tool.poetry.group.dev.dependencies]
+isort = "^5.13.2"
+black = "^24.4.2"
+flake8 = "^7.0.0"
+flake8-pyproject = "^1.2.3"
+bandit = "^1.7.8"
+mypy = "^1.10.0"
+types-redis = "^4.6.0.20240425"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+
+[tool.isort]
+profile = 'black'
+
+[tool.black]
+line-length = 120
+skip-string-normalization = true
+
+[tool.flake8]
+exclude = [".git", "__pycache__", ".venv"]
+max-line-length = 120
+
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+plugins = [
+    "pydantic.mypy"
+]
