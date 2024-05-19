@@ -27,7 +27,7 @@ async def async_test_client() -> AsyncGenerator[AsyncClient, None]:
 
 @pytest.fixture(scope='session')
 async def es_client() -> Elasticsearch:
-    es_client = Elasticsearch(hosts=test_settings.es_host, verify_certs=False)
+    es_client = Elasticsearch(hosts=test_settings.ES_HOST, verify_certs=False)
     yield es_client
     es_client.close()
 
