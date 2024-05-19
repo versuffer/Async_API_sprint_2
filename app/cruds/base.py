@@ -2,9 +2,6 @@ import random
 from abc import ABC, abstractmethod
 from uuid import UUID
 
-from elasticsearch import Elasticsearch
-
-from app.core.config import es_settings
 import backoff
 import elastic_transport
 from elasticsearch import Elasticsearch
