@@ -1,19 +1,19 @@
-import datetime
 import uuid
-
-import aiohttp
 import pytest
 from elasticsearch import AsyncElasticsearch
 from elasticsearch.helpers import async_bulk
+from httpx import AsyncClient
 
 from tests.functional.settings import test_settings
 
 
 #  Название теста должно начинаться со слова `test_`
-#  Любой тест с асинхронными вызовами нужно оборачивать декоратором `pytest.mark.asyncio`, который следит за запуском и работой цикла событий. 
+#  Любой тест с асинхронными вызовами нужно оборачивать декоратором `pytest.mark.asyncio`, который следит за запуском и работой цикла событий.
 
-@pytest.mark.asyncio
-async def test_search():
+pytestmark = pytest.mark.anyio
+
+
+async def test_search(async_test_client: AsyncClient):
     # 1. Генерируем данные для ES
     es_data = [{
         'id': str(uuid.uuid4()),
@@ -35,7 +35,7 @@ async def test_search():
         'directors': [
             {'id': 'caf76c67-c0fe-477e-8a66-3ab3ff2574b5', 'name': 'Stan'}
         ]
-    } for _ in range(60)]
+    } for _ in range(18)]
 
     bulk_query: list[dict] = []
     for row in es_data:
@@ -57,17 +57,10 @@ async def test_search():
         raise Exception('Ошибка записи данных в Elasticsearch')
 
     # 3. Запрашиваем данные из ES по API
-
-    session = aiohttp.ClientSession()
-    url = test_settings.service_url + f'/api/v1/films/search'
     query_data = {'search_query': 'Star', 'page': 1, 'page_size': 20}
-    async with session.get(url, params=query_data) as response:
-        body = await response.json()
-        headers = response.headers
-        status = response.status
-    await session.close()
+    response = await async_test_client.get('/api/v1/films/search', params=query_data)
 
     # 4. Проверяем ответ 
 
-    assert status == 200
-    assert len(body) == 50
+    assert response.status_code == 200
+    assert len(response.json()) == 20
