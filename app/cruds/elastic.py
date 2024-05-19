@@ -1,11 +1,10 @@
 from uuid import UUID
 
 import elasticsearch
-from elasticsearch import Elasticsearch
 from pydantic import ValidationError
 
-from app.core.config import es_settings
 from app.core.logs import logger
+from app.cruds.base import FilmCrudInterface, GenreCrudInterface, PersonCrudInterface, BaseElasticCrud
 from app.schemas.elastic_responses import (
     ElasticFilmSeachResponse,
     ElasticGetFilmResponse,
@@ -18,10 +17,7 @@ from app.schemas.v1.params_schema import DetailParams, FilmParams, ListParams
 from app.schemas.v1.persons_schemas import PersonSchema, PersonSchemaExtend
 
 
-class FilmElasticCrud:
-    def __init__(self):
-        self.elastic = Elasticsearch([es_settings.dict()], timeout=5)
-
+class FilmElasticCrud(FilmCrudInterface, BaseElasticCrud):
     @staticmethod
     async def build_film_search_body(
         query: str | None, page: int, page_size: int, sort: str | None, genre: UUID | None
@@ -121,10 +117,7 @@ class FilmElasticCrud:
             return None
 
 
-class GenreElasticCrud:
-    def __init__(self):
-        self.elastic = Elasticsearch([es_settings.dict()], timeout=5)
-
+class GenreElasticCrud(GenreCrudInterface, BaseElasticCrud):
     async def get_genres(self, query_params: ListParams) -> list[GenreSchema] | None:
         try:
             result = self.elastic.search(
@@ -155,9 +148,7 @@ class GenreElasticCrud:
             return None
 
 
-class PersonElasticCrud:
-    def __init__(self):
-        self.elastic = Elasticsearch([es_settings.dict()], timeout=5)
+class PersonElasticCrud(PersonCrudInterface, BaseElasticCrud):
 
     async def get_person(self, person_id: UUID) -> PersonSchema | None:
         try:
