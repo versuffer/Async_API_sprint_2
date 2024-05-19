@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings
 
 class TestSettings(BaseSettings):
     es_host: str = 'http://localhost:9200'
-    es_index: str = "test_movies"
+    es_index: str = "movies"
     # es_id_field: str = ...
     es_index_mapping: dict = {
             "settings": {
