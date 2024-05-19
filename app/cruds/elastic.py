@@ -4,7 +4,12 @@ import elasticsearch
 from pydantic import ValidationError
 
 from app.core.logs import logger
-from app.cruds.base import FilmCrudInterface, GenreCrudInterface, PersonCrudInterface, BaseElasticCrud
+from app.cruds.base import (
+    BaseElasticCrud,
+    FilmCrudInterface,
+    GenreCrudInterface,
+    PersonCrudInterface,
+)
 from app.schemas.elastic_responses import (
     ElasticFilmSeachResponse,
     ElasticGetFilmResponse,
