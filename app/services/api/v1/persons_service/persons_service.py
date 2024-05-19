@@ -1,6 +1,6 @@
 from fastapi import Depends
 
-from app.cruds.elastic import ElasticCrud
+from app.cruds.elastic import PersonElasticCrud
 from app.schemas.v1.params_schema import DetailParams, SearchParams
 from app.schemas.v1.persons_schemas import PersonSchema
 from app.services.api.v1.base import BaseV1Service
@@ -8,10 +8,10 @@ from app.services.api.v1.base import BaseV1Service
 
 class PersonsService(BaseV1Service):
 
-    def __init__(self, crud: ElasticCrud = Depends()):
+    def __init__(self, crud: PersonElasticCrud = Depends()):
         self.crud = crud
 
-    async def get_person(self, query_params: DetailParams) -> PersonSchema:
+    async def get_person(self, query_params: DetailParams) -> PersonSchema | None:
         return await self.crud.get_person(query_params.query)
 
     async def get_person_films(self, query_params: DetailParams):
