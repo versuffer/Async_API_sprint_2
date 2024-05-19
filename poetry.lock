@@ -98,13 +98,15 @@ files = [
 
 [package.dependencies]
 aiosignal = ">=1.1.2"
+async-timeout = ">=4.0.0a3,<5.0"
 attrs = ">=17.3.0"
+charset-normalizer = ">=2.0,<4.0"
 frozenlist = ">=1.1.1"
 multidict = ">=4.5,<7.0"
 yarl = ">=1.0,<2.0"
 
 [package.extras]
-speedups = ["Brotli", "aiodns", "brotlicffi"]
+speedups = ["Brotli", "aiodns", "cchardet"]
 
 [[package]]
 name = "aiosignal"
@@ -2392,4 +2394,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.11.9"
-content-hash = "2aae00123f7d31fe4593475e392feac1ff7cf1a3b2d3edba0fe9c1183aeab8d5"
+content-hash = "2a879c00579652f0ab8e3a97181938e8ef874f8407c2399dedf273a8337655b2"
