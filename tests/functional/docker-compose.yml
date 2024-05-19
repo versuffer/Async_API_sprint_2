@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  elasticsearch:
+    container_name: test_elasticsearch
+    image: elasticsearch:8.7.1
+    restart: always
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    networks:
+      - custom_network
+    ports:
+      - "9200:9200"
+    healthcheck:
+       test: curl -s http://${ELASTIC_HOST}:${ELASTIC_PORT} >/dev/null || exit 1
+       interval: 30s
+       timeout: 10s
+       retries: 50
+
+  redis:
+    image: redis:7.2.4
+    container_name: test_redis_cache
+    restart: always
+    networks:
+      - custom_network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+
+  movies_api:
+    container_name: test_movies_api
+    build:
+      context: ../
+      dockerfile: ../Dockerfile_test
+    restart: always
+    env_file:
+      - ".env"
+    networks:
+      - custom_network
+    depends_on:
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+
+networks:
+  custom_network:
+    external: false
+    driver: bridge
