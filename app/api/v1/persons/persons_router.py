@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi_cache.decorator import cache
 
 from app.api.docs.tags import ApiTags
@@ -26,4 +26,6 @@ async def get_person(
     query_params: DetailParams = Depends(),
     service: PersonsService = Depends(),
 ):
-    return await service.get_person(query_params)
+    if person := await service.get_person(query_params):
+        return person
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)

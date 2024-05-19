@@ -1,5 +1,6 @@
 from uuid import UUID
 
+import elastic_transport
 import elasticsearch
 from pydantic import ValidationError
 
@@ -25,7 +26,7 @@ from app.schemas.v1.persons_schemas import PersonSchema, PersonSchemaExtend
 class GetGenreMixin(BaseElasticCrud):
     async def get_genre(self, genre_id: UUID) -> GenreSchema | None:
         try:
-            result = self.elastic.get(index="genres", id=str(genre_id))
+            result = self.get(index="genres", uuid=genre_id)
             validated_obj = ElasticGetResponse(**result.body)
             return validated_obj.get_out_schema_source
         except elasticsearch.NotFoundError as error:
@@ -33,6 +34,9 @@ class GetGenreMixin(BaseElasticCrud):
             return None
         except ValidationError as error:
             logger.error("Ошибка валидации: %s", error)
+            return None
+        except (elastic_transport.ConnectionError, elastic_transport.ConnectionTimeout) as error:
+            logger.error("Ошибка соединения с Elastic: %s", error)
             return None
         except Exception as error:
             logger.error("Неизвестная ошибка при получении жанра: %s", error)
@@ -73,7 +77,7 @@ class FilmElasticCrud(GetGenreMixin, FilmCrudInterface):
 
     async def get_film(self, film_id: UUID) -> GetFilmExtendedSchemaOut | None:
         try:
-            result = self.elastic.get(index="movies", id=str(film_id))
+            result = self.get(index="movies", uuid=film_id)
             parsed_result = ElasticGetFilmResponse(**result)
             film = parsed_result.film
             film_genres = []
@@ -81,7 +85,7 @@ class FilmElasticCrud(GetGenreMixin, FilmCrudInterface):
                 body: dict = {
                     "query": {"match": {"name": {"query": genre, "fuzziness": "auto"}}},
                 }
-                genre_result = self.elastic.search(index="genres", body=body)
+                genre_result = self.search(index="genres", body=body)
                 validated_genre = ElasticSearchResponse(**genre_result.body).get_object
                 if validated_genre:
                     film_genres.append(GenreSchemaBase(**validated_genre.dict()))
@@ -93,6 +97,9 @@ class FilmElasticCrud(GetGenreMixin, FilmCrudInterface):
         except ValidationError as error:
             logger.error("Ошибка валидации: %s", error)
             return None
+        except (elastic_transport.ConnectionError, elastic_transport.ConnectionTimeout) as error:
+            logger.error("Ошибка соединения с Elastic: %s", error)
+            return None
         except Exception as error:
             logger.error("Неизвестная ошибка при получении фильма с id: %s, ошибка: %s", film_id, error)
             return None
@@ -100,9 +107,12 @@ class FilmElasticCrud(GetGenreMixin, FilmCrudInterface):
     async def search_films(self, query: str, page: int, page_size: int) -> list[GetFilmSchemaOut]:
         try:
             body = await self.build_film_search_body(query, page, page_size, None, None)
-            results = self.elastic.search(index="movies", body=body)
+            results = self.search(index="movies", body=body)
             parsed_results = ElasticFilmSeachResponse(**results)
             return parsed_results.films_list  # type:ignore
+        except (elastic_transport.ConnectionError, elastic_transport.ConnectionTimeout) as error:
+            logger.error("Ошибка соединения с Elastic: %s", error)
+            return []
         except Exception as error:
             logger.error("Неизвестная ошибка при получении фильмов по запросу: %s, ошибка: %s", query, error)
             return []
@@ -116,9 +126,12 @@ class FilmElasticCrud(GetGenreMixin, FilmCrudInterface):
                 )
             else:
                 body = await self.build_film_search_body(query=None, **params.dict())  # type: ignore
-            results = self.elastic.search(index="movies", body=body)
+            results = self.search(index="movies", body=body)
             parsed_results = ElasticFilmSeachResponse(**results)
             return parsed_results.films_list  # type:ignore
+        except (elastic_transport.ConnectionError, elastic_transport.ConnectionTimeout) as error:
+            logger.error("Ошибка соединения с Elastic: %s", error)
+            return []
         except Exception as error:
             logger.error("Неизвестная ошибка при получении фильмов: %s", error)
             return []
@@ -127,13 +140,18 @@ class FilmElasticCrud(GetGenreMixin, FilmCrudInterface):
 class GenreElasticCrud(GetGenreMixin, GenreCrudInterface):
     async def get_genres(self, query_params: ListParams) -> list[GenreSchema] | None:
         try:
-            result = self.elastic.search(
-                index="genres", size=query_params.page_size, from_=(query_params.page - 1) * query_params.page_size
-            )
+            body: dict = {
+                "size": query_params.page_size,
+                "from": (query_params.page - 1) * query_params.page_size,
+            }
+            result = self.search(index="genres", body=body)
             validated_obj = ElasticSearchResponse(**result.body)
             return validated_obj.get_objects
         except ValidationError as error:
             logger.error("Ошибка валидации: %s", error)
+            return None
+        except (elastic_transport.ConnectionError, elastic_transport.ConnectionTimeout) as error:
+            logger.error("Ошибка соединения с Elastic: %s", error)
             return None
         except Exception as error:
             logger.error("Неизвестная ошибка при получении всех жанров: %s", error)
@@ -143,10 +161,10 @@ class GenreElasticCrud(GetGenreMixin, GenreCrudInterface):
 class PersonElasticCrud(BaseElasticCrud, PersonCrudInterface):
     async def get_person(self, person_id: UUID) -> PersonSchema | None:
         try:
-            person = self.elastic.get(index="persons", id=str(person_id))
+            person = self.get(index="persons", uuid=person_id)
             validated_person = ElasticGetResponse(**person.body)
 
-            person_movies = self.elastic.search(index="movies", body=self.person_films_body(validated_person.id))
+            person_movies = self.search(index="movies", body=self.person_films_body(validated_person.id))
             validated_movies = ElasticSearchResponse(**person_movies.body)
 
             films = [movie.get_person_films(validated_person.id) for movie in validated_movies.get_objects]
@@ -157,12 +175,14 @@ class PersonElasticCrud(BaseElasticCrud, PersonCrudInterface):
         except ValidationError as error:
             logger.error("Ошибка валидации: %s", error)
             return None
+        except (elastic_transport.ConnectionError, elastic_transport.ConnectionTimeout) as error:
+            logger.error("Ошибка соединения с Elastic: %s", error)
+            return None
         except Exception as error:
             logger.error("Неизвестная ошибка при получении действующего лица: %s", error)
             return None
 
     async def search_persons(self, query_params) -> list[PersonSchemaExtend] | None:
-
         body: dict = {
             "size": query_params.page_size,
             "from": (query_params.page - 1) * query_params.page_size,
@@ -170,13 +190,13 @@ class PersonElasticCrud(BaseElasticCrud, PersonCrudInterface):
         }
 
         try:
-            persons_result = self.elastic.search(index="persons", body=body)
+            persons_result = self.search(index="persons", body=body)
             persons = ElasticSearchResponse(**persons_result.body)
 
             result: list[PersonSchemaExtend] = []
 
             for person in persons.get_objects:
-                movies_result = self.elastic.search(index="movies", body=self.person_films_body(person.id))
+                movies_result = self.search(index="movies", body=self.person_films_body(person.id))
                 validated_movies = ElasticSearchResponse(**movies_result.body)
 
                 films = [movie.get_person_films(person.id) for movie in validated_movies.get_objects]
@@ -193,14 +213,16 @@ class PersonElasticCrud(BaseElasticCrud, PersonCrudInterface):
         except ValidationError as error:
             logger.error("Ошибка валидации: %s", error)
             return None
+        except (elastic_transport.ConnectionError, elastic_transport.ConnectionTimeout) as error:
+            logger.error("Ошибка соединения с Elastic: %s", error)
+            return None
         except Exception as error:
             logger.error("Неизвестная ошибка при получении действующего лица: %s", error)
             return None
 
     async def search_person_films(self, query_params: DetailParams) -> list[GetFilmExtendedSchemaOut] | None:
-
         try:
-            movies_result = self.elastic.search(index="movies", body=self.person_films_body(query_params.query))
+            movies_result = self.search(index="movies", body=self.person_films_body(query_params.query))
             validated_movies = ElasticSearchResponse(**movies_result.body)
             return validated_movies.get_objects
 
@@ -209,6 +231,9 @@ class PersonElasticCrud(BaseElasticCrud, PersonCrudInterface):
             return None
         except ValidationError as error:
             logger.error("Ошибка валидации: %s", error)
+            return None
+        except (elastic_transport.ConnectionError, elastic_transport.ConnectionTimeout) as error:
+            logger.error("Ошибка соединения с Elastic: %s", error)
             return None
         except Exception as error:
             logger.error("Неизвестная ошибка при получении действующего лица: %s", error)
