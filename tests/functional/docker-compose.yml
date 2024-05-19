@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  elasticsearch:
+  test_elasticsearch:
     container_name: test_elasticsearch
     image: elasticsearch:8.7.1
     restart: always
@@ -11,36 +11,39 @@ services:
     networks:
       - custom_network
     ports:
-      - "9200:9200"
+      - "${ELASTIC_PORT}:${ELASTIC_PORT}"
     healthcheck:
-       test: curl -s http://${ELASTIC_HOST}:${ELASTIC_PORT} >/dev/null || exit 1
-       interval: 30s
-       timeout: 10s
-       retries: 50
+       test: curl -s ${ELASTIC_SCHEMA}://${ELASTIC_HOST}:${ELASTIC_PORT} > /dev/null || exit 1
+       interval: 3s
+       timeout: 2s
+       retries: 5
 
-  redis:
+  test_redis:
     image: redis:7.2.4
-    container_name: test_redis_cache
+    container_name: test_redis
     restart: always
     networks:
       - custom_network
     healthcheck:
       test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
 
-  movies_api:
+  test_movies_api:
     container_name: test_movies_api
     build:
-      context: ../
-      dockerfile: ../Dockerfile_test
-    restart: always
+      context: ../../
+      dockerfile: ./tests/functional/Dockerfile_tests
+    restart: no
     env_file:
       - ".env"
+    environment:
+      ELASTIC_HOST: test_elasticsearch
+      REDIS_HOST: test_redis
     networks:
       - custom_network
     depends_on:
-      redis:
+      test_redis:
         condition: service_healthy
-      elasticsearch:
+      test_elasticsearch:
         condition: service_healthy
 
 networks:

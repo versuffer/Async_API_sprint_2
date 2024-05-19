@@ -10,12 +10,8 @@ COPY ["poetry.lock", "pyproject.toml", "./"]
 
 RUN poetry install --no-root --no-interaction --with tests
 
-WORKDIR /app
+COPY app app
 
-COPY app .
+COPY tests tests
 
-WORKDIR /api_movie_app
-
-COPY tests .
-
-CMD ["pytest"]
+CMD ["pytest", "-vv", "-s"]

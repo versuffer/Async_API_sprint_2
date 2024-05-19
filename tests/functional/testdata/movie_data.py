@@ -1,4 +1,3 @@
-import random
 import uuid
 
 movie_data = [

@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Annotated
 
-from pydantic import Extra, Field, HttpUrl, RedisDsn, field_validator
+from pydantic import RedisDsn, field_validator
 from pydantic_core.core_schema import ValidationInfo
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -10,7 +10,7 @@ BASEDIR = Path(__file__).resolve().parent.parent.parent
 
 class Settings(BaseSettings):
     # App
-    APP_TITLE: str = 'Async API Sprint 1'
+    APP_TITLE: str = 'Async API Sprint 2'
     APP_DESCRIPTION: str = 'Default description'
     DEBUG: bool = False
     LOG_LEVEL: str = 'INFO'
@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     ELASTIC_HOST: str
     ELASTIC_PORT: str
     ELASTIC_SCHEMA: str
-    ELASTIC_URL: HttpUrl | str = ''
+    ELASTIC_URL: str = ''
 
     # Cache
     DEFAULT_EXPIRE_TIME_SECONDS: int = 60
@@ -44,21 +44,10 @@ class Settings(BaseSettings):
         return str(value)
 
     @field_validator('ELASTIC_URL')
-    def build_elastic_url(cls, value: str | None, info: ValidationInfo) -> HttpUrl:
+    def build_elastic_url(cls, value: str | None, info: ValidationInfo) -> str:
         if not value:
             value = f'{info.data["ELASTIC_SCHEMA"]}://{info.data["ELASTIC_HOST"]}:{info.data["ELASTIC_PORT"]}'
-        return HttpUrl(value)
+        return value
 
 
-class ElasticsearchSettings(BaseSettings):
-    scheme: str = Field(alias='ELASTIC_SCHEMA')
-    host: str = Field(alias='ELASTIC_HOST')
-    port: int = Field(alias='ELASTIC_PORT')
-
-    class Config:
-        env_file = '.env'
-        extra = Extra.ignore
-
-
-es_settings = ElasticsearchSettings()
 app_settings = Settings()

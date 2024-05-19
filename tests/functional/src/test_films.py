@@ -1,12 +1,6 @@
-import uuid
-from time import sleep
-
 import pytest
-from elasticsearch import AsyncElasticsearch
-from elasticsearch.helpers import async_bulk
 from httpx import AsyncClient
 
-from tests.functional.settings import test_settings
 from tests.functional.testdata.movie_data import es_movie_index_mapping, movie_data
 
 pytestmark = pytest.mark.anyio

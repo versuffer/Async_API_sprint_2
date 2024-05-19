@@ -1,17 +1,12 @@
-import uuid
-from pprint import pprint
-from time import sleep
 from typing import AsyncGenerator
 
 import pytest
-import pytest_asyncio
 from elasticsearch import Elasticsearch
-from elasticsearch.helpers import async_bulk, bulk, streaming_bulk
+from elasticsearch.helpers import bulk
 from httpx import AsyncClient
 
 from app.main import app as fastapi_app
 from tests.functional.settings import test_settings
-from tests.functional.testdata.movie_data import movie_data
 
 
 @pytest.fixture(scope='session')
@@ -26,8 +21,11 @@ async def async_test_client() -> AsyncGenerator[AsyncClient, None]:
 
 
 @pytest.fixture(scope='session')
-async def es_client() -> Elasticsearch:
-    es_client = Elasticsearch(hosts=test_settings.ES_HOST, verify_certs=False)
+async def es_client() -> AsyncGenerator[Elasticsearch, Elasticsearch]:
+    es_client = Elasticsearch(
+        hosts=[test_settings.ELASTIC_URL],
+        verify_certs=False,
+    )
     yield es_client
     es_client.close()
 
@@ -53,9 +51,9 @@ def es_prepared_data():
 
         bulk_query: list[dict] = []
         for row in data:
-            data = {'_index': index, '_id': row['id']}
-            data.update({'_source': row})
-            bulk_query.append(data)
+            bulk_data = {'_index': index, '_id': row['id']}
+            bulk_data.update({'_source': row})
+            bulk_query.append(bulk_data)
 
         return bulk_query
 
