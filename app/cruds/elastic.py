@@ -22,7 +22,24 @@ from app.schemas.v1.params_schema import DetailParams, FilmParams, ListParams
 from app.schemas.v1.persons_schemas import PersonSchema, PersonSchemaExtend
 
 
-class FilmElasticCrud(FilmCrudInterface, BaseElasticCrud):
+class GetGenreMixin(BaseElasticCrud):
+    async def get_genre(self, genre_id: UUID) -> GenreSchema | None:
+        try:
+            result = self.elastic.get(index="genres", id=str(genre_id))
+            validated_obj = ElasticGetResponse(**result.body)
+            return validated_obj.get_out_schema_source
+        except elasticsearch.NotFoundError as error:
+            logger.warning("Не найден жанр: %s", error)
+            return None
+        except ValidationError as error:
+            logger.error("Ошибка валидации: %s", error)
+            return None
+        except Exception as error:
+            logger.error("Неизвестная ошибка при получении жанра: %s", error)
+            return None
+
+
+class FilmElasticCrud(GetGenreMixin, FilmCrudInterface):
     @staticmethod
     async def build_film_search_body(
         query: str | None, page: int, page_size: int, sort: str | None, genre: UUID | None
@@ -106,23 +123,8 @@ class FilmElasticCrud(FilmCrudInterface, BaseElasticCrud):
             logger.error("Неизвестная ошибка при получении фильмов: %s", error)
             return []
 
-    async def get_genre(self, genre_id: UUID) -> GenreSchema | None:
-        try:
-            result = self.elastic.get(index="genres", id=str(genre_id))
-            validated_obj = ElasticGetResponse(**result.body)
-            return validated_obj.get_out_schema_source
-        except elasticsearch.NotFoundError as error:
-            logger.warning("Не найден жанр: %s", error)
-            return None
-        except ValidationError as error:
-            logger.error("Ошибка валидации: %s", error)
-            return None
-        except Exception as error:
-            logger.error("Неизвестная ошибка при получении жанра: %s", error)
-            return None
 
-
-class GenreElasticCrud(GenreCrudInterface, BaseElasticCrud):
+class GenreElasticCrud(GetGenreMixin, GenreCrudInterface):
     async def get_genres(self, query_params: ListParams) -> list[GenreSchema] | None:
         try:
             result = self.elastic.search(
@@ -137,24 +139,8 @@ class GenreElasticCrud(GenreCrudInterface, BaseElasticCrud):
             logger.error("Неизвестная ошибка при получении всех жанров: %s", error)
             return None
 
-    async def get_genre(self, genre_id: UUID) -> GenreSchema | None:
-        try:
-            result = self.elastic.get(index="genres", id=str(genre_id))
-            validated_obj = ElasticGetResponse(**result.body)
-            return validated_obj.get_out_schema_source
-        except elasticsearch.NotFoundError as error:
-            logger.warning("Не найден жанр: %s", error)
-            return None
-        except ValidationError as error:
-            logger.error("Ошибка валидации: %s", error)
-            return None
-        except Exception as error:
-            logger.error("Неизвестная ошибка при получении жанра: %s", error)
-            return None
 
-
-class PersonElasticCrud(PersonCrudInterface, BaseElasticCrud):
-
+class PersonElasticCrud(BaseElasticCrud, PersonCrudInterface):
     async def get_person(self, person_id: UUID) -> PersonSchema | None:
         try:
             person = self.elastic.get(index="persons", id=str(person_id))
