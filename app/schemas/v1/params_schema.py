@@ -14,7 +14,7 @@ class PaginationMixin(BaseModel):
     page_size: int = Query(default=10, gt=0, le=20)
 
 
-class DetailParams(QueryMixin):
+class DetailParams(BaseModel):
     query: UUID = Field(default=Query(), alias="id")
 
 

@@ -6,7 +6,6 @@ from pydantic import ValidationError
 
 from app.core.config import es_settings
 from app.core.logs import logger
-from app.cruds.base import CrudInterface
 from app.schemas.elastic_responses import (
     ElasticFilmSeachResponse,
     ElasticGetFilmResponse,
@@ -19,7 +18,7 @@ from app.schemas.v1.params_schema import DetailParams, FilmParams, ListParams
 from app.schemas.v1.persons_schemas import PersonSchema, PersonSchemaExtend
 
 
-class ElasticCrud(CrudInterface):
+class FilmElasticCrud:
     def __init__(self):
         self.elastic = Elasticsearch([es_settings.dict()], timeout=5)
 
@@ -106,6 +105,26 @@ class ElasticCrud(CrudInterface):
             logger.error("Неизвестная ошибка при получении фильмов: %s", error)
             return []
 
+    async def get_genre(self, genre_id: UUID) -> GenreSchema | None:
+        try:
+            result = self.elastic.get(index="genres", id=str(genre_id))
+            validated_obj = ElasticGetResponse(**result.body)
+            return validated_obj.get_out_schema_source
+        except elasticsearch.NotFoundError as error:
+            logger.warning("Не найден жанр: %s", error)
+            return None
+        except ValidationError as error:
+            logger.error("Ошибка валидации: %s", error)
+            return None
+        except Exception as error:
+            logger.error("Неизвестная ошибка при получении жанра: %s", error)
+            return None
+
+
+class GenreElasticCrud:
+    def __init__(self):
+        self.elastic = Elasticsearch([es_settings.dict()], timeout=5)
+
     async def get_genres(self, query_params: ListParams) -> list[GenreSchema] | None:
         try:
             result = self.elastic.search(
@@ -134,6 +153,11 @@ class ElasticCrud(CrudInterface):
         except Exception as error:
             logger.error("Неизвестная ошибка при получении жанра: %s", error)
             return None
+
+
+class PersonElasticCrud:
+    def __init__(self):
+        self.elastic = Elasticsearch([es_settings.dict()], timeout=5)
 
     async def get_person(self, person_id: UUID) -> PersonSchema | None:
         try:

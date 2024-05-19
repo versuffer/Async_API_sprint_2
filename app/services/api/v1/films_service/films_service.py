@@ -2,8 +2,7 @@ from uuid import UUID
 
 from fastapi import Depends
 
-from app.cruds.base import CrudInterface
-from app.cruds.get_crud import get_crud
+from app.cruds.elastic import FilmElasticCrud
 from app.schemas.v1.films_schemas import GetFilmExtendedSchemaOut, GetFilmSchemaOut
 from app.schemas.v1.params_schema import FilmParams
 from app.services.api.v1.base import BaseV1Service
@@ -11,7 +10,7 @@ from app.services.api.v1.base import BaseV1Service
 
 class FilmsService(BaseV1Service):
 
-    def __init__(self, crud: CrudInterface = Depends(get_crud)):
+    def __init__(self, crud: FilmElasticCrud = Depends()):
         self.crud = crud
 
     async def get_films(self, params: FilmParams) -> list[GetFilmSchemaOut] | None:
