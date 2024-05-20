@@ -31,6 +31,14 @@ async def es_client() -> AsyncGenerator[Elasticsearch, Elasticsearch]:
 
 
 @pytest.fixture
+def es_delete_data(es_client: Elasticsearch):
+    def inner(es_index: str, data_id: str):
+        es_client.delete(index=es_index, id=data_id, refresh=True)
+
+    return inner
+
+
+@pytest.fixture
 def es_write_data(es_client: Elasticsearch):
     def inner(es_index: str, index_mapping: dict, data: list[dict]):
         if es_client.indices.exists(index=es_index):
