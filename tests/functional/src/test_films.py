@@ -31,12 +31,3 @@ class TestFilms:
 
         assert response.status_code == expected_answer['status']
         assert len(response.json()) == expected_answer['length']
-
-    # async def test_person_search(self, async_test_client: AsyncClient, es_write_data, es_movie_data: list[dict],
-    #                             query_data: dict, expected_answer: dict):
-    #
-    #     es_write_data(es_movie_data)
-    #     response = await async_test_client.get('/api/v1/films/search', params=query_data)
-    #
-    #     assert response.status_code == expected_answer['status']
-    #     assert len(response.json()) == expected_answer['length']
