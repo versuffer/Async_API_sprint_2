@@ -5,6 +5,7 @@ from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
 from httpx import AsyncClient
 
+from app.main import app as fastapi_app
 from tests.functional.settings import test_settings
 
 
@@ -13,10 +14,8 @@ def anyio_backend():
     return 'asyncio'
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture
 async def async_test_client() -> AsyncGenerator[AsyncClient, None]:
-    from app.main import app as fastapi_app
-
     async with AsyncClient(app=fastapi_app, base_url='http://test') as app:
         yield app
 
