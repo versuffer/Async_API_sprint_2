@@ -12,12 +12,8 @@ from app.api.docs.tags import api_tags
 from app.core.config import app_settings
 from app.core.logs import logger
 
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    redis = aioredis.from_url(str(app_settings.REDIS_DSN))
-    FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
-    yield
+redis = aioredis.from_url(str(app_settings.REDIS_DSN))
+FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
 
 
 app = FastAPI(
@@ -27,7 +23,6 @@ app = FastAPI(
     debug=app_settings.DEBUG,
     docs_url='/',
     openapi_tags=api_tags,
-    lifespan=lifespan,
 )
 
 app.include_router(api_router)

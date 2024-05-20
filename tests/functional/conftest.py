@@ -1,11 +1,12 @@
+from functools import wraps
 from typing import AsyncGenerator
+from unittest import mock
 
 import pytest
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
 from httpx import AsyncClient
 
-from app.main import app as fastapi_app
 from tests.functional.settings import test_settings
 
 
@@ -14,8 +15,10 @@ def anyio_backend():
     return 'asyncio'
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 async def async_test_client() -> AsyncGenerator[AsyncClient, None]:
+    from app.main import app as fastapi_app
+
     async with AsyncClient(app=fastapi_app, base_url='http://test') as app:
         yield app
 
@@ -28,6 +31,14 @@ async def es_client() -> AsyncGenerator[Elasticsearch, Elasticsearch]:
     )
     yield es_client
     es_client.close()
+
+
+@pytest.fixture
+def es_delete_data(es_client: Elasticsearch):
+    def inner(es_index: str, data_id: str):
+        es_client.delete(index=es_index, id=data_id, refresh=True)
+
+    return inner
 
 
 @pytest.fixture
