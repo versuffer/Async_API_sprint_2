@@ -1,6 +1,4 @@
-from functools import wraps
 from typing import AsyncGenerator
-from unittest import mock
 
 import pytest
 from elasticsearch import Elasticsearch

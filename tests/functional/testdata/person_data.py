@@ -1,5 +1,3 @@
-import uuid
-
 es_persons_index = {
     "settings": {
         "refresh_interval": "1s",
