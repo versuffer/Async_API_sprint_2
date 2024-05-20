@@ -1,19 +1,16 @@
-from pathlib import Path
 from typing import Annotated
 
 from pydantic import RedisDsn, field_validator
 from pydantic_core.core_schema import ValidationInfo
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-BASEDIR = Path(__file__).resolve().parent.parent.parent
 
-
-class Settings(BaseSettings):
+class TestSettings(BaseSettings):
     # App
     APP_TITLE: str = 'Async API Sprint 2'
     APP_DESCRIPTION: str = 'Default description'
-    DEBUG: bool = False
-    LOG_LEVEL: str = 'INFO'
+    DEBUG: bool = True
+    LOG_LEVEL: str = 'DEBUG'
 
     # Redis
     REDIS_HOST: str
@@ -23,14 +20,11 @@ class Settings(BaseSettings):
 
     # Elasticsearch
     ELASTIC_HOST: str
-    ELASTIC_PORT: str
+    ELASTIC_PORT: int
     ELASTIC_SCHEMA: str
     ELASTIC_URL: str = ''
 
-    # Cache
-    DEFAULT_EXPIRE_TIME_SECONDS: int = 60
-
-    model_config = SettingsConfigDict(env_file=BASEDIR / '.env')
+    model_config = SettingsConfigDict(env_file='.env')
 
     @field_validator('REDIS_DSN')
     def build_redis_dsn(cls, value: RedisDsn | None, info: ValidationInfo) -> Annotated[str, RedisDsn]:
@@ -47,7 +41,8 @@ class Settings(BaseSettings):
     def build_elastic_url(cls, value: str | None, info: ValidationInfo) -> str:
         if not value:
             value = f'{info.data["ELASTIC_SCHEMA"]}://{info.data["ELASTIC_HOST"]}:{info.data["ELASTIC_PORT"]}'
+
         return value
 
 
-app_settings = Settings()
+test_settings = TestSettings()

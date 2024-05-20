@@ -33,11 +33,13 @@ services:
       - xpack.security.enabled=false
     networks:
       - custom_network
+    ports:
+      - "${ELASTIC_PORT}:${ELASTIC_PORT}"
     healthcheck:
-       test: curl -s http://${ELASTIC_HOST}:${ELASTIC_PORT} >/dev/null || exit 1
-       interval: 30s
-       timeout: 10s
-       retries: 50
+       test: curl -s ${ELASTIC_SCHEMA}://${ELASTIC_HOST}:${ELASTIC_PORT} > /dev/null || exit 1
+       interval: 3s
+       timeout: 2s
+       retries: 5
 
   etl_scheduler:
     container_name: "etl_scheduler"
@@ -60,6 +62,8 @@ services:
     restart: always
     networks:
       - custom_network
+    ports:
+      - "6379:6379"
     healthcheck:
       test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
 

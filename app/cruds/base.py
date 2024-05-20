@@ -6,7 +6,7 @@ import backoff
 import elastic_transport
 from elasticsearch import Elasticsearch
 
-from app.core.config import es_settings
+from app.core.config import app_settings
 from app.schemas.v1.films_schemas import GetFilmExtendedSchemaOut, GetFilmSchemaOut
 from app.schemas.v1.genres_schemas import GenreSchema
 from app.schemas.v1.params_schema import (
@@ -54,7 +54,10 @@ class PersonCrudInterface(ABC):
 
 class BaseElasticCrud:
     def __init__(self):
-        self.elastic = Elasticsearch([es_settings.dict()], timeout=5)
+        self.elastic = Elasticsearch(
+            hosts=[app_settings.ELASTIC_URL],
+            timeout=5,
+        )
 
     @backoff.on_exception(
         backoff.expo,
