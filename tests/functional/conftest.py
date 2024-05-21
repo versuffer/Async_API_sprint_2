@@ -7,6 +7,8 @@ from httpx import AsyncClient
 
 from app.main import app as fastapi_app
 from tests.functional.settings import test_settings
+from tests.functional.testdata.genres_data import genre_action
+from tests.functional.testdata.movie_data import cool_movie
 
 
 @pytest.fixture(scope='session')
@@ -66,3 +68,13 @@ def es_prepared_data():
         return bulk_query
 
     return inner
+
+
+@pytest.fixture
+def one_movie_data():
+    return cool_movie
+
+
+@pytest.fixture
+def one_genre_data():
+    return genre_action

@@ -3,11 +3,18 @@ import uuid
 genres_data = [
     {
         "id": str(uuid.uuid4()),
-        "name": f"documental_{i}",
+        "name": f"Action_{i}",
         "description": "cool",
     }
-    for i in range(10)
+    for i in range(9)
 ]
+
+genre_action = {
+        "id": '9c89267d-fffd-489b-a745-b98cde24413b',
+        "name": "Action",
+        "description": "cool action",
+}
+genres_data.append(genre_action)
 
 es_genres_index_mapping: dict = {
     "settings": {
