@@ -10,9 +10,9 @@ genres_data = [
 ]
 
 genre_action = {
-        "id": '9c89267d-fffd-489b-a745-b98cde24413b',
-        "name": "Action",
-        "description": "cool action",
+    "id": '9c89267d-fffd-489b-a745-b98cde24413b',
+    "name": "Action",
+    "description": "cool action",
 }
 genres_data.append(genre_action)
 
