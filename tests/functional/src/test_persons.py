@@ -1,3 +1,5 @@
+import json
+
 import pytest
 from httpx import AsyncClient
 
@@ -20,8 +22,16 @@ class TestPersons:
         ],
     )
     async def test_person_search(
-        self, async_test_client: AsyncClient, es_write_data, es_prepared_data, query_data: dict, expected_answer: dict
+        self,
+        async_test_client: AsyncClient,
+        es_write_data,
+        es_prepared_data,
+        es_clear_index,
+        query_data: dict,
+        expected_answer: dict,
     ):
+        es_clear_index(es_index=self.PERSON_INDEX, index_mapping=es_persons_index)
+        es_clear_index(es_index=self.MOVIE_INDEX, index_mapping=es_movie_index_mapping)
 
         es_write_data(
             es_index=self.PERSON_INDEX,
@@ -42,8 +52,16 @@ class TestPersons:
         ],
     )
     async def test_person_detail(
-        self, async_test_client: AsyncClient, es_write_data, es_prepared_data, person_data: dict, expected_answer: dict
+        self,
+        async_test_client: AsyncClient,
+        es_write_data,
+        es_prepared_data,
+        es_clear_index,
+        person_data: dict,
+        expected_answer: dict,
     ):
+        es_clear_index(es_index=self.PERSON_INDEX, index_mapping=es_persons_index)
+        es_clear_index(es_index=self.MOVIE_INDEX, index_mapping=es_movie_index_mapping)
 
         es_write_data(
             es_index=self.PERSON_INDEX,
@@ -68,9 +86,13 @@ class TestPersons:
         es_delete_data,
         es_write_data,
         es_prepared_data,
+        es_clear_index,
         person_data: dict,
         expected_answer: dict,
     ):
+
+        es_clear_index(es_index=self.PERSON_INDEX, index_mapping=es_persons_index)
+        es_clear_index(es_index=self.MOVIE_INDEX, index_mapping=es_movie_index_mapping)
 
         es_write_data(
             es_index=self.PERSON_INDEX,
@@ -88,3 +110,47 @@ class TestPersons:
 
         assert response.status_code == expected_answer['status']
         assert len(response.json()) == expected_answer['person_films']
+
+    async def test_cache_person_detail(
+        self,
+        async_test_client: AsyncClient,
+        es_write_data,
+        es_prepared_data,
+        es_delete_data,
+        redis_client,
+        es_clear_index,
+    ):
+
+        person_data = {'id': 'ef86b8ff-3c82-4d31-ad8e-72b69f4e3f95'}
+
+        await redis_client.flushall()
+
+        es_clear_index(es_index=self.PERSON_INDEX, index_mapping=es_persons_index)
+        es_clear_index(es_index=self.MOVIE_INDEX, index_mapping=es_movie_index_mapping)
+
+        es_write_data(
+            es_index=self.PERSON_INDEX,
+            index_mapping=es_persons_index,
+            data=es_prepared_data(index=self.PERSON_INDEX, data=persons_from_film),
+        )
+
+        response_before_del = await async_test_client.get(f'/api/v1/persons/{person_data["id"]}', params=person_data)
+        assert response_before_del.status_code == 200
+
+        es_delete_data(es_index=self.PERSON_INDEX, obj_id=person_data['id'])
+
+        redis_keys = await redis_client.keys("fastapi-cache:*")
+        assert len(redis_keys) == 1
+
+        get_redis_key = await redis_client.get(redis_keys[0])
+        assert json.loads(get_redis_key).get('id') == response_before_del.json().get('uuid')
+
+        await redis_client.flushall()
+
+        redis_keys_after_del = await redis_client.keys("fastapi-cache:*")
+        assert len(redis_keys_after_del) == 0
+
+        response_after_teardown_redis = await async_test_client.get(
+            f'/api/v1/persons/{person_data["id"]}', params=person_data
+        )
+        assert response_after_teardown_redis.status_code == 404
