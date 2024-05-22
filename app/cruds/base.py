@@ -59,22 +59,8 @@ class BaseElasticCrud:
             timeout=5,
         )
 
-    @backoff.on_exception(
-        backoff.expo,
-        (elastic_transport.ConnectionError, elastic_transport.ConnectionTimeout),
-        max_tries=3,
-        max_time=5,
-        jitter=lambda base: random.uniform(0.2, 1) * base,
-    )
     def get(self, index: str, uuid: UUID):
         return self.elastic.get(index=index, id=str(uuid))
 
-    @backoff.on_exception(
-        backoff.expo,
-        (elastic_transport.ConnectionError, elastic_transport.ConnectionTimeout),
-        max_tries=3,
-        max_time=5,
-        jitter=lambda base: random.uniform(0.2, 1) * base,
-    )
     def search(self, index: str, body: dict):
         return self.elastic.search(index=index, body=body)

@@ -2,6 +2,7 @@ import json
 
 import pytest
 from httpx import AsyncClient
+from fastapi import status
 
 from tests.functional.testdata.movie_data import es_movie_index_mapping, movie_data
 from tests.functional.testdata.person_data import es_persons_index, persons_from_film
@@ -17,8 +18,8 @@ class TestPersons:
     @pytest.mark.parametrize(
         'query_data, expected_answer',
         [
-            ({'search_query': 'Ann', 'page': 1, 'page_size': 20}, {'status': 200, 'length': 1}),
-            ({'search_query': 'Mashed potato'}, {'status': 200, 'length': 0}),
+            ({'search_query': 'Ann', 'page': 1, 'page_size': 20}, {'status': status.HTTP_200_OK, 'length': 1}),
+            ({'search_query': 'Mashed potato'}, {'status': status.HTTP_200_OK, 'length': 0}),
         ],
     )
     async def test_person_search(
@@ -47,8 +48,8 @@ class TestPersons:
     @pytest.mark.parametrize(
         'person_data, expected_answer',
         [
-            ({'id': 'ef86b8ff-3c82-4d31-ad8e-72b69f4e3f95'}, {'status': 200}),
-            ({'id': 'ae45bcf2-17a4-4db1-aa55-b5e5b051e87e'}, {'status': 404}),
+            ({'id': 'ef86b8ff-3c82-4d31-ad8e-72b69f4e3f95'}, {'status': status.HTTP_200_OK}),
+            ({'id': 'ae45bcf2-17a4-4db1-aa55-b5e5b051e87e'}, {'status': status.HTTP_404_NOT_FOUND}),
         ],
     )
     async def test_person_detail(
@@ -76,8 +77,8 @@ class TestPersons:
     @pytest.mark.parametrize(
         'person_data, expected_answer',
         [
-            ({'id': 'ef86b8ff-3c82-4d31-ad8e-72b69f4e3f95'}, {'status': 200, 'person_films': 10}),
-            ({'id': 'ae45bcf2-17a4-4db1-aa55-b5e5b051e87e'}, {'status': 200, 'person_films': 0}),
+            ({'id': 'ef86b8ff-3c82-4d31-ad8e-72b69f4e3f95'}, {'status': status.HTTP_200_OK, 'person_films': 10}),
+            ({'id': 'ae45bcf2-17a4-4db1-aa55-b5e5b051e87e'}, {'status': status.HTTP_200_OK, 'person_films': 0}),
         ],
     )
     async def test_person_film(
@@ -135,7 +136,7 @@ class TestPersons:
         )
 
         response_before_del = await async_test_client.get(f'/api/v1/persons/{person_data["id"]}', params=person_data)
-        assert response_before_del.status_code == 200
+        assert response_before_del.status_code == status.HTTP_200_OK
 
         es_delete_data(es_index=self.PERSON_INDEX, obj_id=person_data['id'])
 
@@ -153,4 +154,4 @@ class TestPersons:
         response_after_teardown_redis = await async_test_client.get(
             f'/api/v1/persons/{person_data["id"]}', params=person_data
         )
-        assert response_after_teardown_redis.status_code == 404
+        assert response_after_teardown_redis.status_code == status.HTTP_404_NOT_FOUND
