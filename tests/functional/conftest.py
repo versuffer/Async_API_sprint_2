@@ -5,7 +5,6 @@ import redis.asyncio as redis
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
 from httpx import AsyncClient
-from redis import Redis
 
 from app.main import app as fastapi_app
 from tests.functional.settings import test_settings
