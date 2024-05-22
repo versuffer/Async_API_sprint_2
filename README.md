@@ -2,6 +2,30 @@
 
 https://github.com/versuffer/Async_API_sprint_2
 
+# Как запустить апишку
+
+```bash
+cd infra
+```
+
+```bash
+docker compose up -d --build
+```
+
+# Как запустить тесты
+
+```bash
+cd tests/functional
+```
+
+```bash
+docker compose up -d --build
+```
+
+```bash
+docker compose logs -f test_movies_api
+```
+
 # Проектная работа 5 спринта
 
 В папке **tasks** ваша команда найдёт задачи, которые необходимо выполнить во втором спринте модуля "Сервис Async API".

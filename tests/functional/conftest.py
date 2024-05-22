@@ -20,19 +20,8 @@ def anyio_backend():
 @pytest.fixture(scope='session')
 async def redis_client():
     client = redis.Redis.from_url(test_settings.REDIS_DSN, decode_responses=True)
-    try:
-        await client.ping()
-        print("Successfully connected to Redis")
-    except Exception as e:
-        print(f"Failed to connect to Redis: {e}")
     yield client
     await client.close()
-
-
-# @pytest.fixture
-# async def teardown_redis(radis_client: Redis):
-#     yield
-#     radis_client.flushall()
 
 
 @pytest.fixture
