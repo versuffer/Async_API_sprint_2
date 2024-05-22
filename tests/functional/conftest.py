@@ -1,6 +1,7 @@
 from typing import AsyncGenerator
 
 import pytest
+import redis.asyncio as redis
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
 from httpx import AsyncClient
@@ -14,6 +15,13 @@ from tests.functional.testdata.movie_data import cool_movie
 @pytest.fixture(scope='session')
 def anyio_backend():
     return 'asyncio'
+
+
+@pytest.fixture(scope='session')
+async def redis_client():
+    client = redis.Redis.from_url(test_settings.REDIS_DSN, decode_responses=True)
+    yield client
+    await client.close()
 
 
 @pytest.fixture
@@ -34,8 +42,8 @@ async def es_client() -> AsyncGenerator[Elasticsearch, Elasticsearch]:
 
 @pytest.fixture
 def es_delete_data(es_client: Elasticsearch):
-    def inner(es_index: str, data_id: str):
-        es_client.delete(index=es_index, id=data_id, refresh=True)
+    def inner(es_index: str, obj_id: str):
+        es_client.delete(index=es_index, id=obj_id, refresh=True)
 
     return inner
 
@@ -51,6 +59,16 @@ def es_write_data(es_client: Elasticsearch):
 
         if errors:
             raise Exception('Ошибка записи данных в Elasticsearch')
+
+    return inner
+
+
+@pytest.fixture
+def es_clear_index(es_client: Elasticsearch):
+    def inner(es_index: str, index_mapping: dict):
+        if es_client.indices.exists(index=es_index):
+            es_client.indices.delete(index=es_index)
+        es_client.indices.create(index=es_index, **index_mapping)
 
     return inner
 
