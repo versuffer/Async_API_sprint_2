@@ -2,7 +2,8 @@ from uuid import UUID
 
 from fastapi import Depends
 
-from app.cruds.elastic import PersonElasticCrud
+from app.cruds.base import PersonCrudInterface
+from app.cruds.get_cruds import get_person_crud
 from app.schemas.v1.params_schema import DetailParams, SearchParams
 from app.schemas.v1.persons_schemas import PersonSchema
 from app.services.api.v1.base import BaseV1Service
@@ -10,7 +11,7 @@ from app.services.api.v1.base import BaseV1Service
 
 class PersonsService(BaseV1Service):
 
-    def __init__(self, crud: PersonElasticCrud = Depends()):
+    def __init__(self, crud: PersonCrudInterface = Depends(get_person_crud)):
         self.crud = crud
 
     async def get_person(self, person_id: UUID) -> PersonSchema | None:

@@ -1,8 +1,8 @@
 import json
 
 import pytest
-from httpx import AsyncClient
 from fastapi import status
+from httpx import AsyncClient
 
 from tests.functional.testdata.movie_data import es_movie_index_mapping, movie_data
 from tests.functional.testdata.person_data import es_persons_index, persons_from_film
