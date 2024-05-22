@@ -44,14 +44,13 @@ class TestPersons:
     async def test_person_detail(
         self, async_test_client: AsyncClient, es_write_data, es_prepared_data, person_data: dict, expected_answer: dict
     ):
-
         es_write_data(
             es_index=self.PERSON_INDEX,
             index_mapping=es_persons_index,
             data=es_prepared_data(index=self.PERSON_INDEX, data=persons_from_film),
         )
 
-        response = await async_test_client.get(f'/api/v1/persons/{person_data["id"]}', params=person_data)
+        response = await async_test_client.get(f'/api/v1/persons/{person_data["id"]}')
 
         assert response.status_code == expected_answer['status']
 

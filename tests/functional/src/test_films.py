@@ -43,10 +43,9 @@ class TestFilms:
             ("unknown", status.HTTP_422_UNPROCESSABLE_ENTITY),
             (-8, status.HTTP_422_UNPROCESSABLE_ENTITY),
         ],
-
     )
     async def test_film_get_fail(
-            self, async_test_client: AsyncClient, es_write_data, es_prepared_data, movie_id, expected_status_code
+        self, async_test_client: AsyncClient, es_write_data, es_prepared_data, movie_id, expected_status_code
     ):
         es_write_data(
             es_index=self.MOVIE_INDEX,
@@ -65,7 +64,7 @@ class TestFilms:
         assert response.status_code == expected_status_code
 
     async def test_film_get_success(
-            self, async_test_client: AsyncClient, es_write_data, es_prepared_data, one_movie_data
+        self, async_test_client: AsyncClient, es_write_data, es_prepared_data, one_movie_data
     ):
         es_write_data(
             es_index=self.MOVIE_INDEX,
@@ -83,10 +82,13 @@ class TestFilms:
 
         assert response.status_code == status.HTTP_200_OK
         resp_json = response.json()
-        assert resp_json.get('id') == movie_id
+        assert resp_json.get('uuid') == movie_id
 
     async def test_films_get(
-            self, async_test_client: AsyncClient, es_write_data, es_prepared_data,
+        self,
+        async_test_client: AsyncClient,
+        es_write_data,
+        es_prepared_data,
     ):
         es_write_data(
             es_index=self.MOVIE_INDEX,
@@ -108,7 +110,10 @@ class TestFilms:
         assert resp_json[0].get('imdb_rating') == 0.0
 
     async def test_films_get_sort(
-            self, async_test_client: AsyncClient, es_write_data, es_prepared_data,
+        self,
+        async_test_client: AsyncClient,
+        es_write_data,
+        es_prepared_data,
     ):
         es_write_data(
             es_index=self.MOVIE_INDEX,
@@ -131,7 +136,7 @@ class TestFilms:
         assert resp_json[-1].get('imdb_rating') == 0.0
 
     async def test_films_get_genre(
-            self, async_test_client: AsyncClient, es_write_data, es_prepared_data, one_genre_data, one_movie_data
+        self, async_test_client: AsyncClient, es_write_data, es_prepared_data, one_genre_data, one_movie_data
     ):
         es_write_data(
             es_index=self.MOVIE_INDEX,
@@ -150,4 +155,4 @@ class TestFilms:
         assert response.status_code == status.HTTP_200_OK
         resp_json = response.json()
         assert len(resp_json) == 1
-        assert resp_json[0].get('id') == one_movie_data.get('id')
+        assert resp_json[0].get('uuid') == one_movie_data.get('id')
