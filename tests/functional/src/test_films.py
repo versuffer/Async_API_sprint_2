@@ -17,8 +17,8 @@ class TestFilms:
     @pytest.mark.parametrize(
         'query_data, expected_answer',
         [
-            ({'search_query': 'Star', 'page': 1, 'page_size': 20}, {'status': 200, 'length': 10}),
-            ({'search_query': 'Mashed potato'}, {'status': 200, 'length': 0}),
+            ({'search_query': 'Star', 'page': 1, 'page_size': 20}, {'status': status.HTTP_200_OK, 'length': 10}),
+            ({'search_query': 'Mashed potato'}, {'status': status.HTTP_200_OK, 'length': 0}),
         ],
     )
     async def test_films_search(

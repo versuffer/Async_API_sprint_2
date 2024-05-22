@@ -1,9 +1,6 @@
-import random
 from abc import ABC, abstractmethod
 from uuid import UUID
 
-import backoff
-import elastic_transport
 from elasticsearch import Elasticsearch
 
 from app.core.config import app_settings
@@ -15,7 +12,7 @@ from app.schemas.v1.params_schema import (
     ListParams,
     SearchParams,
 )
-from app.schemas.v1.persons_schemas import PersonSchemaExtend
+from app.schemas.v1.persons_schemas import PersonSchema, PersonSchemaExtend
 
 
 class FilmCrudInterface(ABC):
@@ -44,6 +41,10 @@ class GenreCrudInterface(ABC):
 
 class PersonCrudInterface(ABC):
     @abstractmethod
+    async def get_person(self, person_id: UUID) -> PersonSchema | None:
+        pass
+
+    @abstractmethod
     async def search_persons(self, query_params: SearchParams) -> list[PersonSchemaExtend] | None:
         pass
 
@@ -59,22 +60,8 @@ class BaseElasticCrud:
             timeout=5,
         )
 
-    @backoff.on_exception(
-        backoff.expo,
-        (elastic_transport.ConnectionError, elastic_transport.ConnectionTimeout),
-        max_tries=3,
-        max_time=5,
-        jitter=lambda base: random.uniform(0.2, 1) * base,
-    )
     def get(self, index: str, uuid: UUID):
         return self.elastic.get(index=index, id=str(uuid))
 
-    @backoff.on_exception(
-        backoff.expo,
-        (elastic_transport.ConnectionError, elastic_transport.ConnectionTimeout),
-        max_tries=3,
-        max_time=5,
-        jitter=lambda base: random.uniform(0.2, 1) * base,
-    )
     def search(self, index: str, body: dict):
         return self.elastic.search(index=index, body=body)
