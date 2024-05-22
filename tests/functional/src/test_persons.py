@@ -69,7 +69,7 @@ class TestPersons:
             data=es_prepared_data(index=self.PERSON_INDEX, data=persons_from_film),
         )
 
-        response = await async_test_client.get(f'/api/v1/persons/{person_data["id"]}', params=person_data)
+        response = await async_test_client.get(f'/api/v1/persons/{person_data["id"]}')
 
         assert response.status_code == expected_answer['status']
 
@@ -143,7 +143,7 @@ class TestPersons:
         assert len(redis_keys) == 1
 
         get_redis_key = await redis_client.get(redis_keys[0])
-        assert json.loads(get_redis_key).get('id') == response_before_del.json().get('uuid')
+        assert json.loads(get_redis_key) == response_before_del.json()
 
         await redis_client.flushall()
 

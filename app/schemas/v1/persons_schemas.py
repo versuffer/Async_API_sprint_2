@@ -16,7 +16,7 @@ class PersonFilm(BaseModel):
 
 
 class PersonSchema(BaseModel):
-    id: UUID
+    id: UUID = Field(serialization_alias='uuid')
     full_name: str
 
 
@@ -25,4 +25,4 @@ class PersonSchemaExtend(PersonSchema):
 
 
 class PersonSchemaOut(PersonSchemaExtend):
-    id: UUID = Field(serialization_alias="uuid")
+    pass

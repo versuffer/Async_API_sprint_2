@@ -82,7 +82,7 @@ class TestFilms:
 
         assert response.status_code == status.HTTP_200_OK
         resp_json = response.json()
-        assert resp_json.get('id') == movie_id
+        assert resp_json.get('uuid') == movie_id
 
     async def test_films_get(
         self,
@@ -155,4 +155,4 @@ class TestFilms:
         assert response.status_code == status.HTTP_200_OK
         resp_json = response.json()
         assert len(resp_json) == 1
-        assert resp_json[0].get('id') == one_movie_data.get('id')
+        assert resp_json[0].get('uuid') == one_movie_data.get('id')
